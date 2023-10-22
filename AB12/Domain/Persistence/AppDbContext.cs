@@ -1,22 +1,62 @@
-﻿using System.Reflection;
-using AB12.Domain.Base.Common;
+﻿using AB12.Domain.Base.Common;
 using AB12.Domain.Base.Schema;
 using AB12.Domain.Persistence.Configuration;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace AB12.Domain.Persistence
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-
-        }
-
+        #region Props
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderProducts { get; set; }
+        #endregion
 
+        #region Constructor
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+        #endregion
+
+        #region Private Methods       
+        private void Trail()  // Audit Trailing
+        {
+            ChangeTracker.DetectChanges();
+
+            #region Adding
+            var adding = ChangeTracker.Entries()
+                                               .Where(track => track.State == EntityState.Added)
+                                               .Select(track => track.Entity)
+                                               .ToArray();
+
+            foreach (var entity in adding.OfType<AuditableEntity>())
+            {
+                entity.CreatedAt = DateTime.UtcNow;
+            }
+            #endregion
+
+            #region Updating
+            var updating = ChangeTracker.Entries()
+                                                 .Where(track => track.State == EntityState.Modified)
+                                                 .Select(track => track.Entity)
+                                                 .ToArray();
+
+            foreach (var entity in updating.OfType<AuditableEntity>())
+            {
+                entity.UpdatedAt = DateTime.UtcNow;
+            }
+            #endregion
+
+            #region Deleting
+            //will do later
+            #endregion
+
+        }
+        #endregion
+
+        #region Override Methods
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfigurationsFromAssembly(Assembly.GetAssembly(typeof(ProductConfig)));
@@ -24,41 +64,20 @@ namespace AB12.Domain.Persistence
             builder.ApplyConfigurationsFromAssembly(Assembly.GetAssembly(typeof(OrderItemConfig)));
         }
 
-        // Audit Trailing
-        private void Trail()
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-
-
-            ChangeTracker.DetectChanges();
-
-            // while adding
-            var adding = this.ChangeTracker.Entries()
-                .Where(track => track.State == EntityState.Added)
-                .Select(track => track.Entity)
-                .ToArray();
-
-            foreach (var entity in adding)
+            try
             {
-                if (entity is AuditableEntity auditableEntity)
-                {
-                    auditableEntity.CreatedAt = DateTime.UtcNow;
-                    auditableEntity.UpdatedAt = DateTime.UtcNow;
-                }
+                Trail();
+                return await base.SaveChangesAsync(cancellationToken);
             }
-
-            // while updating
-            var updating = this.ChangeTracker.Entries()
-                .Where(track => track.State == EntityState.Modified)
-                .Select(track => track.Entity)
-                .ToArray();
-            
-            foreach (var entity in updating)
+            catch (Exception)
             {
-                if (entity is AuditableEntity auditableEntity)
-                {
-                    auditableEntity.UpdatedAt = DateTime.UtcNow;
-                }
+                throw;
             }
         }
+        #endregion
+
+
     }
 }

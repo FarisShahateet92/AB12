@@ -38,7 +38,7 @@ namespace AB12.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("ID");
@@ -69,7 +69,7 @@ namespace AB12.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("ID");
@@ -107,8 +107,14 @@ namespace AB12.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<byte[]>("Image")
+                       .HasColumnType("LONGBLOB");
+
+                    b.Property<string>("ImageMimeType")
+                       .HasColumnType("varchar(255)");
 
                     b.HasKey("ID");
 

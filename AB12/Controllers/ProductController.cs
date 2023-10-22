@@ -1,49 +1,48 @@
 using AB12.Services.Components;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AB12.Controllers
+namespace AB12.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class ProductController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class ProductController : ControllerBase
+    private readonly ILogger<ProductController> _logger;
+    private readonly ProductService _service;
+
+    public ProductController(ILogger<ProductController> logger, ProductService service)
     {
-        private readonly ILogger<ProductController> _logger;
-        private readonly ProductService _service;
+        _logger = logger;
+        _service = service;
+    }
 
-        public ProductController(ILogger<ProductController> logger, ProductService service)
+    [HttpGet]
+    public async Task<IActionResult> GetList()
+    {
+        try
         {
-            _logger = logger;
-            _service = service;
+            var result = await _service.GetListAsync();
+            return Ok(result);
         }
-
-        [HttpGet()]
-        public async Task<IActionResult> GetList()
+        catch (Exception ex)
         {
-            try
-            {
-                var result = await _service.GetListAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting list of products");
-                throw;
-            }
+            _logger.LogError(ex, "Error getting list of products");
+            throw;
         }
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        try
         {
-            try
-            {
-                var result = _service.GetByIdAsync(id);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting product by id");
-                throw;
-            }
+            var result = await _service.GetByIdAsync(id);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting product by id");
+            throw;
         }
     }
 }
